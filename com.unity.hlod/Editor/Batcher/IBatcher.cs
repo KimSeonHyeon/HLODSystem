@@ -8,6 +8,6 @@ namespace Unity.HLODSystem
     {
         
         void Batch(Transform rootTransform, DisposableList<HLODBuildInfo> targets, Action<float> onProgress);
-
+        void Batch2(Transform rootTransform, DisposableList<HLODBuildInfo> targets, Action<float> onProgress);
     }
 }

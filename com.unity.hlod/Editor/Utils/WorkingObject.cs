@@ -27,7 +27,12 @@ namespace Unity.HLODSystem.Utils
         private Allocator m_allocator;
 
         private UnityEngine.Rendering.LightProbeUsage m_lightProbeUsage;
+        
+        
+        private MeshRenderer m_originMeshRenderer;
 
+        private MeshFilter m_originMeshFilter;
+        
         public string Name { set; get; }
         public WorkingMesh Mesh
         {
@@ -69,6 +74,7 @@ namespace Unity.HLODSystem.Utils
             if (filter != null && filter.sharedMesh != null)
             {
                 m_mesh = filter.sharedMesh.ToWorkingMesh(m_allocator);
+                m_mesh.name = filter.name;
             }
 
             foreach (var mat in renderer.sharedMaterials)
@@ -95,6 +101,46 @@ namespace Unity.HLODSystem.Utils
             m_mesh = mesh;
         }
 
+        
+        /// <summary>
+        /// 원본 메시 렌더러 지정
+        /// </summary>
+        /// <param name="meshRenderer">원본 메시 렌더러 </param>
+        public void SetOriginMeshRenderer(MeshRenderer meshRenderer)
+        {
+            m_originMeshRenderer = meshRenderer;
+        }
+
+        /// <summary>
+        /// 원본 메시 렌더러 가져오기
+        /// </summary>
+        /// <param name="meshRenderer">원본 메시 렌더러 </param>
+        public MeshRenderer GetOriginMeshRenderer()
+        {
+            return m_originMeshRenderer;
+        }
+
+        
+        
+        /// <summary>
+        /// 원본 메시 필터 지정
+        /// </summary>
+        /// <param name="meshRenderer">원본 메시 렌더러 </param>
+        public void SetOriginMeshFilter(MeshFilter meshFilter)
+        {
+            m_originMeshFilter = meshFilter;
+        }
+
+        /// <summary>
+        /// 원본 메시 필터 가져오기
+        /// </summary>
+        /// <param name="meshRenderer">원본 메시 렌더러 </param>
+        public MeshFilter GetOriginMeshFilter()
+        {
+            return m_originMeshFilter;
+        }
+
+        
         public void Dispose()
         {
             m_mesh?.Dispose();

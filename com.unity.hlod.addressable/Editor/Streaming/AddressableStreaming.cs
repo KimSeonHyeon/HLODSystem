@@ -269,6 +269,11 @@ namespace Unity.HLODSystem.Streaming
             addressableController.UpdateMaxManualLevel();
         }
 
+        public void Build2(DisposableList<HLODBuildInfo> infos, GameObject root, bool writeNoPrefab, bool extractMaterial, Action<float> onProgress)
+        {
+            
+        }
+
         private void ExtractMaterial(Dictionary<int, HLODData> hlodDatas, string filenamePrefix)
         {
             Dictionary<string, HLODData.SerializableMaterial> hlodAllMaterials = new Dictionary<string, HLODData.SerializableMaterial>();

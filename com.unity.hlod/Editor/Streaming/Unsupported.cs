@@ -68,6 +68,127 @@ namespace Unity.HLODSystem.Streaming
             m_controllerID = controllerID;
         }
 
+        
+        
+        /// <summary>
+        /// 메테리얼만 저장 
+        /// </summary>
+        /// <param name="infos"></param>
+        /// <param name="root"></param>
+        /// <param name="writeNoPrefab"></param>
+        /// <param name="extractMaterial"></param>
+        /// <param name="onProgress"></param>
+        public void Build2( DisposableList<HLODBuildInfo> infos, GameObject root, 
+          bool writeNoPrefab, bool extractMaterial, Action<float> onProgress)
+        {
+            dynamic options = m_streamingOptions;
+            string path = options.OutputDirectory+ root.name +"/Mesh/" ;
+
+            
+            // 폴더가 없다면 새로운 폴더를 생성
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+                AssetDatabase.Refresh();
+            }
+
+            
+            
+            if (onProgress != null)
+                onProgress(0.0f);
+
+            HLODData.TextureCompressionData compressionData;
+            compressionData.PCTextureFormat = options.PCCompression;
+            compressionData.WebGLTextureFormat = options.WebGLCompression;
+            compressionData.AndroidTextureFormat = options.AndroidCompression;
+            compressionData.iOSTextureFormat = options.iOSCompression;
+            compressionData.tvOSTextureFormat = options.tvOSCompression;
+            
+            HLODData data = new HLODData();
+            data.CompressionData = compressionData;
+            
+            
+            foreach (HLODBuildInfo hlodBuildInfo in infos)
+            {
+                for (var i = 0; i < hlodBuildInfo.WorkingObjects.Count; i++)
+                {
+                    var obj = hlodBuildInfo.WorkingObjects[i]; 
+                    string name = $"{path}{obj.GetOriginMeshFilter().name}.asset";
+                    if (AssetDatabase.GetMainAssetTypeAtPath(name) != null)
+                    {
+                        var storedMesh = AssetDatabase.LoadAssetAtPath<Mesh>(name);
+                        obj.GetOriginMeshFilter().mesh = storedMesh;
+                    }
+                    else
+                    {
+                        AssetDatabase.CreateAsset(obj.Mesh.ToMesh(),name);
+                        AssetDatabase.ImportAsset(name);
+                        var storedMesh = AssetDatabase.LoadAssetAtPath<Mesh>(name);
+                        obj.GetOriginMeshFilter().mesh = storedMesh;
+                    }
+
+                 
+                }
+            }
+            
+         
+
+
+            for (int i = 0; i < infos.Count; ++i)
+            {
+                data.AddFromWokringObjects(infos[i].Name, infos[i].WorkingObjects);
+                data.AddFromWorkingColliders(infos[i].Name, infos[i].Colliders);
+                if (onProgress != null)
+                    onProgress((float) i / (float) infos.Count);
+            }
+
+            if (extractMaterial == true )
+            {
+                path = options.OutputDirectory+ root.name +"/Material/" ;
+                // 폴더가 없다면 새로운 폴더를 생성
+                if (!Directory.Exists(path))
+                {
+                    Directory.CreateDirectory(path);
+                    AssetDatabase.Refresh();
+                }
+                
+                ExtractMaterial(data, $"{path}{root.name}",infos);
+            }
+            
+            
+            foreach (HLODBuildInfo hlodBuildInfo in infos)
+            {
+                for (var i = 0; i < hlodBuildInfo.WorkingObjects.Count; i++)
+                {
+                    var obj = hlodBuildInfo.WorkingObjects[i]; 
+                    GameObject selectedObject = obj.GetOriginMeshFilter().gameObject;
+                    // 프리팹 인스턴스의 하위 오브젝트 복사
+                    GameObject newPrefab = Object.Instantiate(selectedObject);
+                    path = options.OutputDirectory+ root.name +"/Prefab/" ;
+                    // 폴더가 없다면 새로운 폴더를 생성
+                    if (!Directory.Exists(path))
+                    {
+                        Directory.CreateDirectory(path);
+                        AssetDatabase.Refresh();
+                    }
+                    
+                     PrefabUtility.SaveAsPrefabAssetAndConnect(newPrefab,  $"{path}{obj.GetOriginMeshFilter().name}.prefab", InteractionMode.UserAction);
+                     // 복사된 오브젝트 삭제
+                     Object.DestroyImmediate(newPrefab);
+                    
+                }
+            }
+
+            
+            
+            infos.Dispose();
+           
+
+        }
+
+        
+        
+        
         public void Build(SpaceNode rootNode, DisposableList<HLODBuildInfo> infos, GameObject root, 
             float cullDistance, float lodDistance, bool writeNoPrefab, bool extractMaterial, Action<float> onProgress)
         {
@@ -82,6 +203,8 @@ namespace Unity.HLODSystem.Streaming
 
             HLODData.TextureCompressionData compressionData;
             compressionData.PCTextureFormat = options.PCCompression;
+            
+            
             compressionData.WebGLTextureFormat = options.WebGLCompression;
             compressionData.AndroidTextureFormat = options.AndroidCompression;
             compressionData.iOSTextureFormat = options.iOSCompression;
@@ -206,8 +329,7 @@ namespace Unity.HLODSystem.Streaming
             
             defaultController.UpdateMaxManualLevel();
         }
-
-        private void ExtractMaterial(HLODData hlodData, string filenamePrefix)
+    private void ExtractMaterial(HLODData hlodData, string filenamePrefix)
         {
             Dictionary<string, HLODData.SerializableMaterial> extractedMaterials = new Dictionary<string, HLODData.SerializableMaterial>();
             //save files to disk
@@ -238,7 +360,8 @@ namespace Unity.HLODSystem.Streaming
                     }
 
                     var storedTexture = AssetDatabase.LoadAssetAtPath<Texture>(textureFilename);
-                    m_manager.AddGeneratedResource(storedTexture);
+                   
+                        m_manager.AddGeneratedResource(storedTexture);
                     mat.SetTexture(serializeTexture.Name, storedTexture);
                 }
 
@@ -247,7 +370,8 @@ namespace Unity.HLODSystem.Streaming
                 AssetDatabase.ImportAsset(matFilename);
 
                 var storedMaterial = AssetDatabase.LoadAssetAtPath<Material>(matFilename);
-                m_manager.AddGeneratedResource(storedMaterial);
+              
+                    m_manager.AddGeneratedResource(storedMaterial);
 
 
                 using (WorkingMaterial newWM = new WorkingMaterial(Collections.Allocator.Temp, storedMaterial))
@@ -259,7 +383,8 @@ namespace Unity.HLODSystem.Streaming
                 }
 
             }
-
+     
+            
             //apply to HLODData
             var materials = hlodData.GetMaterials();
             for (int i = 0; i < materials.Count; ++i)
@@ -283,6 +408,67 @@ namespace Unity.HLODSystem.Streaming
                     matIds[mi] = extractedMaterials[matIds[mi]].ID;
                 }
             }
+        }
+    
+     
+    /// <summary>
+    /// 원본에 메테리얼 적용 까지 
+    /// </summary>
+    /// <param name="hlodData"></param>
+    /// <param name="filenamePrefix"></param>
+    /// <param name="GeneratedResource"></param>
+        private void ExtractMaterial(HLODData hlodData, string filenamePrefix,DisposableList<HLODBuildInfo> infos)
+        {
+            List<Material> newMaterials = new List<Material>();
+            //save files to disk
+            foreach (var hlodMaterial in hlodData.GetMaterials())
+            {
+                hlodMaterial.GetTextureCount();
+                Material mat = hlodMaterial.To();
+
+                for (int ti = 0; ti < hlodMaterial.GetTextureCount(); ++ti)
+                {
+                    var serializeTexture = hlodMaterial.GetTexture(ti);
+                    Texture2D texture = serializeTexture.To();
+                    byte[] bytes = texture.EncodeToPNG();
+                    string textureFilename = $"{filenamePrefix}_{mat.name}_{serializeTexture.TextureName}.png";
+                    File.WriteAllBytes(textureFilename, bytes);
+
+                    AssetDatabase.ImportAsset(textureFilename);
+
+                    var assetImporter = AssetImporter.GetAtPath(textureFilename);
+                    var textureImporter = assetImporter as TextureImporter;
+
+                    if (textureImporter)
+                    {
+                        textureImporter.wrapMode = serializeTexture.WrapMode;
+                        textureImporter.sRGBTexture = GraphicsFormatUtility.IsSRGBFormat(serializeTexture.GraphicsFormat);
+                        textureImporter.SaveAndReimport();
+                    }
+
+                    var storedTexture = AssetDatabase.LoadAssetAtPath<Texture>(textureFilename);
+                
+                    mat.SetTexture(serializeTexture.Name, storedTexture);
+                }
+
+                string matFilename = $"{filenamePrefix}_{mat.name}.mat";
+                AssetDatabase.CreateAsset(mat, matFilename);
+                AssetDatabase.ImportAsset(matFilename);
+
+                var storedMaterial = AssetDatabase.LoadAssetAtPath<Material>(matFilename);
+                newMaterials.Add(storedMaterial);
+            }
+
+            foreach (HLODBuildInfo hlodBuildInfo in infos)
+            {
+                for (var i = 0; i < hlodBuildInfo.WorkingObjects.Count; i++)
+                {
+                    var obj = hlodBuildInfo.WorkingObjects[i];
+                    obj.GetOriginMeshRenderer().sharedMaterials =newMaterials.ToArray();
+                }
+            }
+            
+         
         }
 
         Dictionary<SpaceNode, HLODTreeNode> convertedTable = new Dictionary<SpaceNode, HLODTreeNode>();

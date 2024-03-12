@@ -63,6 +63,21 @@ namespace Unity.HLODSystem.Utils
             return m_list.Remove(item);
         }
 
+        public bool Remove(T item, bool canDispose)
+        {
+            if (canDispose)
+            {
+                if (item != null)
+                {
+                    item.Dispose();
+                }
+            }
+
+            return m_list.Remove(item);
+        }
+
+        
+        
         public int Count
         {
             get

@@ -39,6 +39,11 @@ namespace Unity.HLODSystem
 
         }
 
+        public void Batch2(Transform rootTransform, DisposableList<HLODBuildInfo> targets, Action<float> onProgress)
+        {
+        
+        }
+
         private void Combine(Transform rootTransform, HLODBuildInfo info)
         {
             var materialTable = new Dictionary<string, WorkingMaterial>();

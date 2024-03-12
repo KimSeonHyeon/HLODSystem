@@ -66,6 +66,27 @@ namespace Unity.HLODSystem
 
         }
 
+        public void Batch2(Transform rootTransform, DisposableList<HLODBuildInfo> targets, Action<float> onProgress)
+        {
+            dynamic options = m_batcherOptions;
+            if (onProgress != null)
+                onProgress(0.0f);
+
+            using (TexturePacker packer = new TexturePacker())
+            {
+                PackingTexture(packer, targets, options, onProgress);
+
+                for (int i = 0; i < targets.Count; ++i)
+                {
+                    CombineOnlyTexture(packer, targets[i], options);
+                    if (onProgress != null)
+                        onProgress(0.5f + ((float)i / (float)targets.Count) * 0.5f);
+                }
+            }
+            
+        }
+        
+        
 
         class MaterialTextureCache : IDisposable
         {
@@ -288,7 +309,8 @@ namespace Unity.HLODSystem
             {
                 var obj = info.WorkingObjects[i]; 
                 ConvertMesh(obj.Mesh, obj.Materials, atlas, textureInfoList[0].InputName);
-
+            
+                
                 for (int si = 0; si < obj.Mesh.subMeshCount; ++si)
                 {
                     var ci = new MeshCombiner.CombineInfo();
@@ -322,8 +344,50 @@ namespace Unity.HLODSystem
             info.WorkingObjects = new DisposableList<WorkingObject>();
             info.WorkingObjects.Add(newObj);
         }
+    
+        
+        /// <summary>
+        /// 텍스쳐만 합칩니다.
+        /// </summary>
+        /// <param name="packer">텍스쳐 합쳐주는 클래스 </param>
+        /// <param name="info"> 합칠 메시들 정보 </param>
+        /// <param name="options">텍스쳐 옵션 (메테리얼 프로퍼티 명등 )</param>
+       private void CombineOnlyTexture( TexturePacker packer, HLODBuildInfo info, dynamic options)
+        {
+            var atlas = packer.GetAtlas(info);
+            if (atlas == null)
+                return;
 
-
+            List<TextureInfo> textureInfoList = options.TextureInfoList;
+             DisposableList<WorkingObject> newObjs =  new DisposableList<WorkingObject>();
+            for (int i = 0; i < info.WorkingObjects.Count; ++i)
+            {
+                var obj = info.WorkingObjects[i]; 
+                ConvertMesh(obj.Mesh, obj.Materials, atlas, textureInfoList[0].InputName);
+                
+          
+            
+                WorkingObject newObj = new WorkingObject(Allocator.Persistent);
+                
+                WorkingMaterial newMat = m_createdMaterials[atlas].Clone();
+                
+                newObj.Name = info.Name;
+                newObj.SetMesh(obj.Mesh);
+                newObj.Materials.Add(newMat);
+                newObjs.Add(newObj);
+                newObj.SetOriginMeshRenderer(obj.GetOriginMeshRenderer());
+                newObj.SetOriginMeshFilter(obj.GetOriginMeshFilter());
+            }
+            
+            info.WorkingObjects = newObjs;
+        }
+        /// <summary>
+        /// 메시의 UV를 재조정해줍니다.
+        /// </summary>
+        /// <param name="mesh"> 적용될 메시 </param>
+        /// <param name="materials">합친 머테리얼</param>
+        /// <param name="atlas">합친 텍스처</param>
+        /// <param name="mainTextureName">메시의 메인 텍스처의 이름</param>
         private void ConvertMesh(WorkingMesh mesh, DisposableList<WorkingMaterial> materials, TexturePacker.TextureAtlas atlas, string mainTextureName)
         {
             var uv = mesh.uv;

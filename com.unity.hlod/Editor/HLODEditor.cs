@@ -7,11 +7,14 @@ using UnityEngine;
 
 namespace Unity.HLODSystem
 {
+    
     [CustomEditor(typeof(HLOD))]
     public class HLODEditor : Editor
     {
         public static class Styles
         {
+            public static GUIContent GenerateCombineMaterialButtonEnable = new GUIContent("Generate Material Combine ", "Generate Material Combine ");
+            
             public static GUIContent GenerateButtonEnable = new GUIContent("Generate", "Generate HLOD mesh.");
             public static GUIContent GenerateButtonExists = new GUIContent("Generate", "HLOD already generated.");
             public static GUIContent DestroyButtonEnable = new GUIContent("Destroy", "Destroy HLOD mesh.");
@@ -142,6 +145,7 @@ namespace Unity.HLODSystem
             }
             EditorGUILayout.EndFoldoutHeaderGroup();
 
+         
             isShowSpaceSplitter = EditorGUILayout.BeginFoldoutHeaderGroup(isShowSpaceSplitter, "SpaceSplitter");
             if (isShowSpaceSplitter)
             {
@@ -288,7 +292,7 @@ namespace Unity.HLODSystem
             }
             EditorGUILayout.EndFoldoutHeaderGroup();
 
-
+            GUIContent generateCombineMaterialButton = Styles.GenerateCombineMaterialButtonEnable;
             GUIContent generateButton = Styles.GenerateButtonEnable;
             GUIContent destroyButton = Styles.DestroyButtonNotExists;
 
@@ -307,6 +311,17 @@ namespace Unity.HLODSystem
             {
                 CoroutineRunner.RunCoroutine(HLODCreator.Create(hlod));
             }
+            
+            
+            // 메테리얼 콤바인 부분
+            GUI.enabled = generateCombineMaterialButton == Styles.GenerateCombineMaterialButtonEnable;
+            if (GUILayout.Button(generateCombineMaterialButton))
+            {
+                CoroutineRunner.RunCoroutine(HLODCreator.CreateCombineMaterial(hlod));
+            }
+            
+            
+            
 
             GUI.enabled = destroyButton == Styles.DestroyButtonEnable;
             if (GUILayout.Button(destroyButton))

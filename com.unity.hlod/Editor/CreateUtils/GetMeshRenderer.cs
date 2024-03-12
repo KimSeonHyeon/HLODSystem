@@ -83,6 +83,46 @@ namespace Unity.HLODSystem
 
                 m_isCalculated = true;
             }
+            
+            /// <summary>
+            /// 레벨 없이 
+            /// </summary>
+            public void Calculate()
+            {
+                if (m_isCalculated == true)
+                    return;
+
+
+                for (int gi = 0; gi < m_lodGroups.Count; ++gi)
+                {
+                    LODGroup lodGroup = m_lodGroups[gi];
+                    LOD[] lods = lodGroup.GetLODs();
+                    for (int li = 0; li < lods.Length; ++li)
+                    {
+                        Renderer[] lodRenderers = lods[li].renderers;
+
+                        //Remove every mesh renderer which is registered to the LODGroup.
+                        for (int ri = 0; ri < lodRenderers.Length; ++ri)
+                        {
+                            MeshRenderer mr = lodRenderers[ri] as MeshRenderer;
+                            if (mr == null)
+                                continue;
+
+                            m_meshRenderers.Remove(mr);
+                        }
+                    }
+
+                    AddReusltFromLODGroup(lodGroup);
+                }
+
+                for (int mi = 0; mi < m_meshRenderers.Count; ++mi)
+                {
+                    MeshRenderer mr = m_meshRenderers[mi];
+                    m_resultMeshRenderers.Add(mr);
+                }
+
+                m_isCalculated = true;
+            }
 
 
             private void AddResultFromMeshSetters(HLODMeshSetter setter, float minObjectSize, int level)
@@ -119,6 +159,33 @@ namespace Unity.HLODSystem
                 }
             }
 
+            
+            
+            /// <summary>
+            /// 레벨없이 
+            /// </summary>
+            /// <param name="lodGroup"></param>
+            private void AddReusltFromLODGroup(LODGroup lodGroup)
+            {
+                LOD[] lods = lodGroup.GetLODs();
+                Renderer[] renderers = lods.Last().renderers;
+                for (int ri = 0; ri < renderers.Length; ++ri)
+                {
+                    MeshRenderer mr = renderers[ri] as MeshRenderer;
+
+                    if (mr == null)
+                        continue;
+
+                    if (mr.gameObject.activeInHierarchy == false || mr.enabled == false)
+                        continue;
+
+                    m_resultMeshRenderers.Add(mr);
+                }
+            }
+            
+            
+            
+            
             private void RemoveUnderMeshSetters(HLODMeshSetter setter)
             {
                 m_lodGroups.RemoveAll(setter.GetComponentsInChildren<LODGroup>());
@@ -190,7 +257,24 @@ namespace Unity.HLODSystem
             calculator.Calculate(minObjectSize, level);
             return calculator.ResultMeshRenderers;
         }
-
+        
+        /// <summary>
+        ///  레벨 없이 
+        /// </summary>
+        /// <param name="gameObject"></param>
+        /// <param name="minObjectSize"></param>
+        /// <param name="level"></param>
+        /// <returns></returns>
+        public static List<MeshRenderer> GetMeshRenderers(GameObject gameObject)
+        {
+            List<GameObject> tmpList = new List<GameObject>();
+            tmpList.Add(gameObject);
+            
+            MeshRendererCalculator calculator = new MeshRendererCalculator(tmpList);
+            calculator.Calculate();
+            return calculator.ResultMeshRenderers;
+        }
+        
     }
 
 }

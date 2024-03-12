@@ -171,14 +171,20 @@ namespace Unity.HLODSystem
         public DisposableList<WorkingObject> WorkingObjects = new DisposableList<WorkingObject>();
         public List<WorkingCollider> Colliders = new List<WorkingCollider>();
         public List<int> Distances = new List<int>();
-        
 
         public Heightmap Heightmap;
 
         public void Dispose()
         {
             WorkingObjects.Dispose();
-            m_detector.Dispose();
+            // 배열이 Dispose된 후
+            if (m_detector.IsCreated)
+            {
+                m_detector.Dispose();
+            }
+            
+
+            
         }
     }   
 }
