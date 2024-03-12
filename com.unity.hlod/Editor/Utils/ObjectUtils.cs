@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -90,6 +91,89 @@ namespace Unity.HLODSystem.Utils
             return targetsByPrefab.ToList();
         }
 
+        
+        
+        
+        public static List<GameObject> HLODSkinedTargets(GameObject root)
+        {
+            List<GameObject> targets = new List<GameObject>();
+
+            List<HLODMeshSetter> meshSetters = GetComponentsInChildren<HLODMeshSetter>(root);
+            List<LODGroup> lodGroups = GetComponentsInChildren<LODGroup>(root);
+            //This contains all of the mesh renderers, so we need to remove the duplicated mesh renderer which in the LODGroup.
+            List<SkinnedMeshRenderer> skinedMeshRenderers = GetComponentsInChildren<SkinnedMeshRenderer>(root);
+
+            List<MeshRenderer> meshRenderers = new List<MeshRenderer>();
+            foreach (SkinnedMeshRenderer skinnedMeshRenderer in skinedMeshRenderers)
+            {
+                Mesh mesh = skinnedMeshRenderer.sharedMesh;
+                // 새로운 게임 오브젝트에 메시 렌더러 추가
+                GameObject gameObject = skinnedMeshRenderer.gameObject;
+                MeshRenderer meshRenderer =ObjectFactory.AddComponent<MeshRenderer>(gameObject); 
+            
+                // 새로운 게임 오브젝트에 메시 필터 추가
+                MeshFilter meshFilter = ObjectFactory.AddComponent<MeshFilter>(gameObject);
+                meshFilter.sharedMesh = mesh;
+
+                List<Material> listMat = new List<Material>();
+                skinnedMeshRenderer.GetSharedMaterials(listMat);
+
+                // 스킨드 메시 렌더러의 재질 할당
+                meshRenderer.SetSharedMaterials(listMat);
+
+                meshRenderers.Add(meshRenderer);
+            }
+
+            
+            for (int mi = 0; mi < meshSetters.Count; ++mi)
+            {
+                if (meshSetters[mi].enabled == false)
+                    continue;
+                if (meshSetters[mi].gameObject.activeInHierarchy == false)
+                    continue;
+                
+                targets.Add(meshSetters[mi].gameObject);
+            
+                lodGroups.RemoveAll(meshSetters[mi].GetComponentsInChildren<LODGroup>());
+                meshRenderers.RemoveAll(meshSetters[mi].GetComponentsInChildren<MeshRenderer>());
+            }
+            
+            for (int i = 0; i < lodGroups.Count; ++i)
+            {
+                if ( lodGroups[i].enabled == false )
+                    continue;
+                if (lodGroups[i].gameObject.activeInHierarchy == false)
+                    continue;
+            
+                targets.Add(lodGroups[i].gameObject);
+            
+                meshRenderers.RemoveAll(lodGroups[i].GetComponentsInChildren<MeshRenderer>());
+            }
+            
+            //Combine renderer which in the LODGroup and renderer which without the LODGroup.
+            for (int ri = 0; ri < meshRenderers.Count; ++ri)
+            {
+                if (meshRenderers[ri].enabled == false)
+                    continue;
+                if (meshRenderers[ri].gameObject.activeInHierarchy == false)
+                    continue;
+            
+                targets.Add(meshRenderers[ri].gameObject);
+            }
+            
+            //Combine several LODGroups and MeshRenderers belonging to Prefab into one.
+            //Since the minimum unit of streaming is Prefab, it must be set to the minimum unit.
+            HashSet<GameObject> targetsByPrefab = new HashSet<GameObject>();
+            for (int ti = 0; ti < targets.Count; ++ti)
+            {
+                var targetPrefab = GetCandidatePrefabRoot(root, targets[ti]);
+                targetsByPrefab.Add(targetPrefab);
+            }
+
+            return targetsByPrefab.ToList();
+        }
+        
+        
         //This is finding nearest prefab root from the HLODRoot.
         public static GameObject GetCandidatePrefabRoot(GameObject hlodRoot, GameObject target)
         {

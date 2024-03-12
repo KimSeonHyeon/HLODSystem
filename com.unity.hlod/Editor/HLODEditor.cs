@@ -13,7 +13,10 @@ namespace Unity.HLODSystem
     {
         public static class Styles
         {
-            public static GUIContent GenerateCombineMaterialButtonEnable = new GUIContent("Generate Material Combine ", "Generate Material Combine ");
+            public static GUIContent GenerateCombineMaterialButtonEnable = new GUIContent("Generate Static Material Combine ", "Generate Material Combine ");
+           
+            public static GUIContent GenerateSkinedCombineMaterialButtonEnable = new GUIContent("Generate Skinned Material Combine ", "Generate Material Combine ");
+
             
             public static GUIContent GenerateButtonEnable = new GUIContent("Generate", "Generate HLOD mesh.");
             public static GUIContent GenerateButtonExists = new GUIContent("Generate", "HLOD already generated.");
@@ -293,6 +296,7 @@ namespace Unity.HLODSystem
             EditorGUILayout.EndFoldoutHeaderGroup();
 
             GUIContent generateCombineMaterialButton = Styles.GenerateCombineMaterialButtonEnable;
+            GUIContent generateSkinedCombineMaterialButton = Styles.GenerateSkinedCombineMaterialButtonEnable;
             GUIContent generateButton = Styles.GenerateButtonEnable;
             GUIContent destroyButton = Styles.DestroyButtonNotExists;
 
@@ -320,7 +324,13 @@ namespace Unity.HLODSystem
                 CoroutineRunner.RunCoroutine(HLODCreator.CreateCombineMaterial(hlod));
             }
             
-            
+                       
+            // 메테리얼 콤바인 부분
+            GUI.enabled = generateSkinedCombineMaterialButton == Styles.GenerateSkinedCombineMaterialButtonEnable;
+            if (GUILayout.Button(generateSkinedCombineMaterialButton))
+            {
+                CoroutineRunner.RunCoroutine(HLODCreator.CreateSkinedCombineMaterial(hlod));
+            } 
             
 
             GUI.enabled = destroyButton == Styles.DestroyButtonEnable;

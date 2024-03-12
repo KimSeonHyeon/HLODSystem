@@ -259,13 +259,31 @@ namespace Unity.HLODSystem
         }
         
         /// <summary>
-        ///  레벨 없이 
+        ///  레벨 없이 스태틱 메시만 
         /// </summary>
         /// <param name="gameObject"></param>
         /// <param name="minObjectSize"></param>
         /// <param name="level"></param>
         /// <returns></returns>
         public static List<MeshRenderer> GetMeshRenderers(GameObject gameObject)
+        {
+            List<GameObject> tmpList = new List<GameObject>();
+            tmpList.Add(gameObject);
+            
+            MeshRendererCalculator calculator = new MeshRendererCalculator(tmpList);
+            calculator.Calculate();
+            return calculator.ResultMeshRenderers;
+        }
+        
+        
+        /// <summary>
+        ///  레벨 없이 스킨 메시
+        /// </summary>
+        /// <param name="gameObject"></param>
+        /// <param name="minObjectSize"></param>
+        /// <param name="level"></param>
+        /// <returns></returns>
+        public static List<MeshRenderer> GetSkinedMeshRenderers(GameObject gameObject)
         {
             List<GameObject> tmpList = new List<GameObject>();
             tmpList.Add(gameObject);

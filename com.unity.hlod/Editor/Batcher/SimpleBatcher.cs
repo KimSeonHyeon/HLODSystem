@@ -377,6 +377,7 @@ namespace Unity.HLODSystem
                 newObjs.Add(newObj);
                 newObj.SetOriginMeshRenderer(obj.GetOriginMeshRenderer());
                 newObj.SetOriginMeshFilter(obj.GetOriginMeshFilter());
+                newObj.OriginSkinnedMeshRender = obj.OriginSkinnedMeshRender;
             }
             
             info.WorkingObjects = newObjs;

@@ -186,6 +186,7 @@ namespace Unity.HLODSystem
             meshRenderers.AddRange(CreateUtils.GetMeshRenderers(hlod.gameObject));
             for (int mi = 0; mi < meshRenderers.Count; ++mi)
             {
+                Debug.Log(meshRenderers[mi].name);
                 info.WorkingObjects.Add(meshRenderers[mi].ToWorkingObject(Allocator.Persistent));
                 info.WorkingObjects[mi].SetOriginMeshRenderer(meshRenderers[mi]);
                 info.WorkingObjects[mi].SetOriginMeshFilter(meshRenderers[mi].GetComponent<MeshFilter>());
@@ -204,10 +205,123 @@ namespace Unity.HLODSystem
             return results;
         }
         
+        /// <summary>
+        ///  빌드 인포 만들기 
+        /// </summary>
+        /// <param name="hlod"></param>
+        /// <returns></returns>
+        private static DisposableList<HLODBuildInfo> CreateBuildInfoSkinnedMesh(HLOD hlod, List<GameObject> origin)
+        {
+            HLODBuildInfo info = new HLODBuildInfo();
+            
+            var meshRenderers = new List<MeshRenderer>();
+            meshRenderers.AddRange(CreateUtils.GetMeshRenderers(hlod.gameObject));
+            for (int mi = 0; mi < meshRenderers.Count; ++mi)
+            {
+                Debug.Log(meshRenderers[mi].name);
+                info.WorkingObjects.Add(meshRenderers[mi].ToWorkingObject(Allocator.Persistent));
+                info.WorkingObjects[mi].OriginSkinnedMeshRender = origin[mi].GetComponent<SkinnedMeshRenderer>();
+                info.WorkingObjects[mi].SetOriginMeshRenderer(meshRenderers[mi]);
+                info.WorkingObjects[mi].SetOriginMeshFilter(meshRenderers[mi].GetComponent<MeshFilter>());
+            }
+            
+            DisposableList<HLODBuildInfo> results = new DisposableList<HLODBuildInfo>();
+            if (info.WorkingObjects.Count > 0)
+            {
+                results.Add(info);
+            }
+            else
+            {
+                results.Dispose();
+            }
+         
+            return results;
+        }
+
+
+        
+             
+        /// <summary>
+        /// 스킨 메시 메테리얼 합치기 
+        /// </summary>
+        /// <param name="hlod"></param>
+        /// <returns></returns>
+        public static IEnumerator CreateSkinedCombineMaterial(HLOD hlod)
+        {
+            try
+            {
+                List<GameObject> hlodTargets = ObjectUtils.HLODSkinedTargets(hlod.gameObject);
+                
+                if (hlodTargets.Count == 0)
+                {
+                    EditorUtility.DisplayDialog("Empty HLOD sources.",
+                        "There are no objects to be included in the HLOD.",
+                        "Ok");
+                    yield break;
+                }
+                
+
+                Stopwatch sw = new Stopwatch();
+
+                AssetDatabase.Refresh();
+                AssetDatabase.SaveAssets();
+
+                sw.Reset();
+                sw.Start();
+                hlod.ConvertedPrefabObjects.Clear();
+                hlod.GeneratedObjects.Clear();
+                using (DisposableList<HLODBuildInfo> buildInfos =
+                       CreateBuildInfoSkinnedMesh(hlod,hlodTargets))
+                {
+                    
+                    using (IBatcher batcher =
+                           (IBatcher)Activator.CreateInstance(hlod.BatcherType,
+                               new object[] { hlod.BatcherOptions }))
+                    {
+                        batcher.Batch2(hlod.transform, buildInfos,
+                            progress =>
+                            {
+                                EditorUtility.DisplayProgressBar("Bake HLOD", "Generating combined static meshes.",
+                                    0.5f + progress * 0.25f);
+                            });
+                    }
+                    Debug.Log("[HLOD] Batch: " + sw.Elapsed.ToString("g"));
+                    sw.Reset();
+                    sw.Start();
+                       
+                    GameObject targetGameObject = hlod.gameObject;
+                    IStreamingBuilder builder =
+                        (IStreamingBuilder)Activator.CreateInstance(hlod.StreamingType,
+                            new object[] { hlod, 0, hlod.StreamingOptions });
+                    builder.BuildSkinnedMesh( buildInfos, targetGameObject,  false,
+                        true,
+                        progress =>
+                        {
+                            EditorUtility.DisplayProgressBar("Bake HLOD", "Storing results.",
+                                0.75f + progress * 0.25f);
+                        });
+                    Debug.Log("[HLOD] Build: " + sw.Elapsed.ToString("g"));
+
+                    
+                }
+            
+                EditorUtility.SetDirty(hlod);
+                EditorUtility.SetDirty(hlod.gameObject);
+                
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+                
+            }
+            
+        }
+        
+        
         
         
         /// <summary>
-        /// 메테리얼 합치기 
+        /// 스태틱 메시 메테리얼 합치기 
         /// </summary>
         /// <param name="hlod"></param>
         /// <returns></returns>
@@ -215,7 +329,6 @@ namespace Unity.HLODSystem
         {
             try
             {
-                
                 List<GameObject> hlodTargets = ObjectUtils.HLODTargets(hlod.gameObject);
                 
                 if (hlodTargets.Count == 0)
@@ -225,8 +338,6 @@ namespace Unity.HLODSystem
                         "Ok");
                     yield break;
                 }
-
-                
                 
                 
                 Stopwatch sw = new Stopwatch();
@@ -262,7 +373,7 @@ namespace Unity.HLODSystem
                     IStreamingBuilder builder =
                         (IStreamingBuilder)Activator.CreateInstance(hlod.StreamingType,
                             new object[] { hlod, 0, hlod.StreamingOptions });
-                    builder.Build2( buildInfos, targetGameObject,  false,
+                    builder.BuildStaticMesh( buildInfos, targetGameObject,  false,
                         true,
                         progress =>
                         {

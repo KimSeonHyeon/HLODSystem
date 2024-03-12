@@ -269,9 +269,14 @@ namespace Unity.HLODSystem.Streaming
             addressableController.UpdateMaxManualLevel();
         }
 
-        public void Build2(DisposableList<HLODBuildInfo> infos, GameObject root, bool writeNoPrefab, bool extractMaterial, Action<float> onProgress)
+        public void BuildStaticMesh(DisposableList<HLODBuildInfo> infos, GameObject root, bool writeNoPrefab, bool extractMaterial, Action<float> onProgress)
         {
             
+        }
+
+        public void BuildSkinnedMesh(DisposableList<HLODBuildInfo> infos, GameObject root, bool writeNoPrefab, bool extractMaterial,
+            Action<float> onProgress)
+        {
         }
 
         private void ExtractMaterial(Dictionary<int, HLODData> hlodDatas, string filenamePrefix)

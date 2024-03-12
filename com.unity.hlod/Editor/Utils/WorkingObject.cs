@@ -27,7 +27,8 @@ namespace Unity.HLODSystem.Utils
         private Allocator m_allocator;
 
         private UnityEngine.Rendering.LightProbeUsage m_lightProbeUsage;
-        
+
+        public SkinnedMeshRenderer OriginSkinnedMeshRender;
         
         private MeshRenderer m_originMeshRenderer;
 
