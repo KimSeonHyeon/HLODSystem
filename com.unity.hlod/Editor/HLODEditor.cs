@@ -325,7 +325,7 @@ namespace Unity.HLODSystem
             }
             
                        
-            // 메테리얼 콤바인 부분
+            // 스킨 메시 콤바인 부분
             GUI.enabled = generateSkinedCombineMaterialButton == Styles.GenerateSkinedCombineMaterialButtonEnable;
             if (GUILayout.Button(generateSkinedCombineMaterialButton))
             {

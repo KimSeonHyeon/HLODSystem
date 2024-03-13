@@ -102,7 +102,14 @@ namespace Unity.HLODSystem.Utils
             List<LODGroup> lodGroups = GetComponentsInChildren<LODGroup>(root);
             //This contains all of the mesh renderers, so we need to remove the duplicated mesh renderer which in the LODGroup.
             List<SkinnedMeshRenderer> skinedMeshRenderers = GetComponentsInChildren<SkinnedMeshRenderer>(root);
+            HashSet<GameObject> targetsByPrefab = new HashSet<GameObject>();
 
+            if (skinedMeshRenderers.Count == 0)
+            {
+                return targetsByPrefab.ToList();
+
+            }
+            
             List<MeshRenderer> meshRenderers = new List<MeshRenderer>();
             foreach (SkinnedMeshRenderer skinnedMeshRenderer in skinedMeshRenderers)
             {
@@ -121,7 +128,7 @@ namespace Unity.HLODSystem.Utils
                 // 스킨드 메시 렌더러의 재질 할당
                 meshRenderer.SetSharedMaterials(listMat);
 
-                meshRenderers.Add(meshRenderer);
+                meshRenderers.Add(meshRenderer); 
             }
 
             
@@ -161,9 +168,6 @@ namespace Unity.HLODSystem.Utils
                 targets.Add(meshRenderers[ri].gameObject);
             }
             
-            //Combine several LODGroups and MeshRenderers belonging to Prefab into one.
-            //Since the minimum unit of streaming is Prefab, it must be set to the minimum unit.
-            HashSet<GameObject> targetsByPrefab = new HashSet<GameObject>();
             for (int ti = 0; ti < targets.Count; ++ti)
             {
                 var targetPrefab = GetCandidatePrefabRoot(root, targets[ti]);

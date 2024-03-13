@@ -254,8 +254,8 @@ namespace Unity.HLODSystem
                 
                 if (hlodTargets.Count == 0)
                 {
-                    EditorUtility.DisplayDialog("Empty HLOD sources.",
-                        "There are no objects to be included in the HLOD.",
+                    EditorUtility.DisplayDialog("스킨 메시가 없습니다.",
+                        "자식으로 스킨 메시를 추가해주세요",
                         "Ok");
                     yield break;
                 }
@@ -281,11 +281,11 @@ namespace Unity.HLODSystem
                         batcher.Batch2(hlod.transform, buildInfos,
                             progress =>
                             {
-                                EditorUtility.DisplayProgressBar("Bake HLOD", "Generating combined static meshes.",
+                                EditorUtility.DisplayProgressBar("스킨메시 텍스쳐 합치는 중", "스킨메시텍스쳐를 합치는 중입니다.",
                                     0.5f + progress * 0.25f);
                             });
                     }
-                    Debug.Log("[HLOD] Batch: " + sw.Elapsed.ToString("g"));
+                    Debug.Log("[Bake] 스킨메시 텍스쳐: " + sw.Elapsed.ToString("g"));
                     sw.Reset();
                     sw.Start();
                        
@@ -297,10 +297,10 @@ namespace Unity.HLODSystem
                         true,
                         progress =>
                         {
-                            EditorUtility.DisplayProgressBar("Bake HLOD", "Storing results.",
+                            EditorUtility.DisplayProgressBar("텍스쳐 및 메테리얼 저장 중 ", "저장 중 ",
                                 0.75f + progress * 0.25f);
                         });
-                    Debug.Log("[HLOD] Build: " + sw.Elapsed.ToString("g"));
+                    Debug.Log("[Save] 저장: " + sw.Elapsed.ToString("g"));
 
                     
                 }
@@ -333,8 +333,8 @@ namespace Unity.HLODSystem
                 
                 if (hlodTargets.Count == 0)
                 {
-                    EditorUtility.DisplayDialog("Empty HLOD sources.",
-                        "There are no objects to be included in the HLOD.",
+                    EditorUtility.DisplayDialog("타켓이 없습니다.",
+                        "자식으로 스태틱 메시가 필요합니다.",
                         "Ok");
                     yield break;
                 }
@@ -361,11 +361,11 @@ namespace Unity.HLODSystem
                         batcher.Batch2(hlod.transform, buildInfos,
                             progress =>
                             {
-                                EditorUtility.DisplayProgressBar("Bake HLOD", "Generating combined static meshes.",
+                                EditorUtility.DisplayProgressBar("스태틱 메시 텍스쳐 합치는 중 ", "스태틱 메시 텍스쳐 합치는 중입니다.",
                                     0.5f + progress * 0.25f);
                             });
                     }
-                    Debug.Log("[HLOD] Batch: " + sw.Elapsed.ToString("g"));
+                    Debug.Log("[Bake] 스태틱 메시 텍스쳐: " + sw.Elapsed.ToString("g"));
                     sw.Reset();
                     sw.Start();
                        
@@ -377,10 +377,10 @@ namespace Unity.HLODSystem
                         true,
                         progress =>
                         {
-                            EditorUtility.DisplayProgressBar("Bake HLOD", "Storing results.",
+                            EditorUtility.DisplayProgressBar("텍스쳐 및 메테리얼 저장 중", "저장 중 ",
                                 0.75f + progress * 0.25f);
                         });
-                    Debug.Log("[HLOD] Build: " + sw.Elapsed.ToString("g"));
+                    Debug.Log("[Save] 텍스쳐 메테리얼 저장: " + sw.Elapsed.ToString("g"));
 
                     
                 }
