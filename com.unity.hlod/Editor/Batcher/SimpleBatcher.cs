@@ -360,6 +360,7 @@ namespace Unity.HLODSystem
 
             List<TextureInfo> textureInfoList = options.TextureInfoList;
              DisposableList<WorkingObject> newObjs =  new DisposableList<WorkingObject>();
+             DisposableList<WorkingObject> originObjs =  info.WorkingObjects;
             for (int i = 0; i < info.WorkingObjects.Count; ++i)
             {
                 var obj = info.WorkingObjects[i]; 
@@ -381,6 +382,7 @@ namespace Unity.HLODSystem
             }
             
             info.WorkingObjects = newObjs;
+            
         }
         /// <summary>
         /// 메시의 UV를 재조정해줍니다.
@@ -670,6 +672,23 @@ namespace Unity.HLODSystem
                 }
                 
             }
+            
+            var skinedMeshRenderers = root.GetComponentsInChildren<SkinnedMeshRenderer>();
+        
+            for (int m = 0; m < skinedMeshRenderers.Length; ++m)
+            {
+                var mesh = skinedMeshRenderers[m];
+                foreach (Material material in mesh.sharedMaterials)
+                {
+                    var names = material.GetTexturePropertyNames();
+                    for (int n = 0; n < names.Length; ++n)
+                    {
+                        texturePropertyNames.Add(names[n]);
+                    }    
+                }
+                
+            }
+            
 
             return texturePropertyNames.ToArray();
         }
